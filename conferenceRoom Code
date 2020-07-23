@@ -1,0 +1,38 @@
+int LEDPin = D7;                 // choose the pin for the LED
+int inputPin = D0;               // choose the motion sensor pin
+bool available;                  // status of the conference room
+int motionCounter = 0;           // variable to count motion events
+
+Timer timer(30000, determineMotion); // timer to check every 30s
+
+void setup() {
+  pinMode(LEDPin, OUTPUT);       // set LED as output
+  pinMode(inputPin, INPUT);      // set sensor as input
+
+  timer.start(); // start determineMotion timer
+}
+
+void determineMotion() {    // this function determines if there's motion
+    if(motionCounter < 2) { // if very little motion was detected
+        if(available == false) { // only publish if status changed
+             Particle.publish("conference", "Confererence Room A is Available", PRIVATE);
+            }
+        available = true; // set status to available
+    } else if (motionCounter >= 2) {
+        if(available == true) { // only publish if status changed
+            Particle.publish("conference", "Confererence Room A is In Use", PRIVATE);
+            }
+        available = false; // set status to in use
+    }
+    motionCounter = 0; // reset motion counter
+}
+
+void loop() {
+  if (digitalRead(inputPin) == HIGH) {  // check if input is HIGH
+    digitalWrite(LEDPin, HIGH);         // turn LED ON if high
+    motionCounter++;                    // increment motion counter
+  } else {
+    digitalWrite(LEDPin, LOW);          // turn LED OFF if no input
+  }
+  delay(500);                           // wait 0.5s
+}
